@@ -7,7 +7,8 @@ This project uses a protected-`main` workflow. Please follow these rules so we k
 1. **`main` is protected.** No one — including admins — can push directly to `main`. All changes must come in through a pull request.
 2. **Each member works on their own branch.** Create a branch off `main` for your work and commit there.
 3. **Open a pull request into `main` when ready.** GitHub will run any checks and let others review before merging.
-4. **Force-pushes and branch deletion on `main` are blocked**, so history stays intact.
+4. **At least one peer review approval is required before merging.** Have a teammate review your changes and approve the PR — GitHub will block the merge button until that happens.
+5. **Force-pushes and branch deletion on `main` are blocked**, so history stays intact.
 
 ## Workflow
 
@@ -26,7 +27,7 @@ git commit -m "Describe your change"
 # 4. Push your branch
 git push -u origin <your-name>/<short-feature-description>
 
-# 5. Open a pull request into main on GitHub, then merge once it's ready
+# 5. Open a pull request into main on GitHub, get it approved by a peer, then merge
 ```
 
 ## Branch naming
@@ -35,5 +36,5 @@ Use `<your-name>/<short-description>`, e.g. `noel/fix-fluorine-calc` or `noel/ad
 
 ## Notes
 
-- Pull requests don't require an approval to merge, but should still be opened so changes are visible and reviewable before landing on `main`.
+- Pull requests require at least one approving review before they can be merged into `main`.
 - Keep branches focused and short-lived — merge (or delete) them once the PR lands.
