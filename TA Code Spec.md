@@ -44,11 +44,13 @@ Section Details
 
 1. Readfile  
    1. Code Prompts user to input folder location containing files with the following naming convention: 2026\_02\_05\_PFAS\_Quantitation\_ByCompound\_NS\_PFOA\_20260805172522  
-   2. Code reads in all rows from all files and makes master list of entire dataset.   
-   3. The following columns should have data recorded, any other column information is ignored.  
+   2. Code reads in all rows from all files and makes master list of entire dataset. Each export file contains exactly one compound, so the master list is the concatenation of all of them.  
+      1. Rows that name no sample (no value in Sample Raw File Name) are not measurements and are excluded. At least one export has been seen to end with such a row carrying stray numbers in Total Area and ISTD Area. The number excluded is reported per file on every run.  
+      2. Two strings appear inside otherwise-numeric columns and mean different things. N/F is an instrument result meaning the compound was looked for and not found, and must be preserved through censoring. N/A means the field does not apply to that row and is treated as missing.  
+   3. The exports carry 30 columns. The following 14 should have data recorded, any other column information is ignored.  
       1. Sample Raw File Name  
       2. Sample Type  
-      3. Sample Name (Batch Ordering)  
+      3. Sample Name — note the exports also contain a separate Sample Order column; these are different fields and must not be confused  
       4. Sample ID  
       5. Compound Name  
       6. Detected Mass  
@@ -59,12 +61,12 @@ Section Details
       11. ISTD Compound Name  
       12. ISTD Amount  
       13. ISTD Area  
-      14. ISTD Actual RT  
+      14. ISTD Actual Rt  
 2. RT Validation  
    1. Every datapoint (target analytes and standards) must align within \+/- 0.4 min of RT observed in cal standard points. If a datapoint does not meet criteria, value is removed from dataset and future calculations.   
       1. Make list of all compounds based on unique values from Compound Name columns in master data set. This list will store values calculated per compound throughout this code and will be referred to as compound list.  
       2. For each compound, calculate the average RT value (from Method Apex RT column) of all rows with that compound in Compound Name Column and “Cal Std” in Sample Type Column. Add as component column to compound list.  
-      3. Check all rows not labeled Cat Std in Sample Type column. The value in the  method apex RT column in these rows should be within \+/- 0.4 of the value generated in the previous calculation that has a matching Compound Name value.   
+      3. Check all rows not labeled Cal Std in Sample Type column. The value in the  method apex RT column in these rows should be within \+/- 0.4 of the value generated in the previous calculation that has a matching Compound Name value.   
       4. If value does not fall within the \+/- 0.4 window, row is deleted from master list.  
 3. LOQ/ULOQ Determination and Censorship  
    1. The LOQ & ULOQ will be determined for each compound by assessing the smallest and largest cal standard theoretical values present in the dataset. All data less than or greater than the LOQ & ULOQ respectively, will be removed from the master list.   
@@ -100,7 +102,7 @@ Section Details
    1. EIS Recovery will be calculated in 2 different ways for every EIS compound in all of the samples of a given matrix. For example, in my method blank matrix (e.g., chicken), EIS recoveries for a compound will be calculated based on the average EIS recovery in each of the triplicate samples as well as the spiked samples. This will be repeated for all the samples in my target sample matrix (e.g., oyster). This section starts by prompting the scientist to create list names for matrix types and then select corresponding samples from sample list to add under each matrix.   
    2. An EIS Compound is built from all unique values from the ISTD Compound Name column in the master list. NIS Compound list is hard coded.   
    3. List of NIS to EIS assignments for the Method  2 calculation is hard coded and if there are EIS Compounds without an assigned NIS, scientist is prompted to input for each. Options include all NIS compounds from hard coded NIS list as well as an option to not input anything as there may not be a corresponding NIS for every EIS compound.  
-   4. Method 1 \= EIS peak area in sample / mean EIS peak area across cal standards and instrument blanks. EIS peak area in all samples is retrieved from the ISTD Area column. Cal standard and instrument blank data is denoted by “Cal Std” and “Blank” in Sample Type Column from master list. The results for each compound in each sample should be appended to the EIS compound list.   
+   4. Method 1 \= EIS peak area in sample / mean EIS peak area across cal standards and instrument blanks. EIS peak area in all samples is retrieved from the ISTD Area column. Cal standard and instrument blank data is denoted by “Cal Std” and “Matrix Blank” in Sample Type Column from master list. The results for each compound in each sample should be appended to the EIS compound list.   
    5. Method 2 \= EIS calculated relative to NIS. Concentration of EIS compound calculated using ![][image1]then dividing by theoretical value of 5000 ng/L \*100% for EIS Recovery value. RF calculated for each EIS compound relative to its associated NIS in each cal standard using this formula:   
       (Area of EIS x Mass of NIS)/(Area of NIS x Mass of EIS)  
       Area of EIS \= value in ISTD Area  
@@ -116,9 +118,9 @@ Section Details
    2. Divide NIS Peak area by mean NIS Peak area in cal standard points. Calculated for every NIS Compound in each sample. NIS Peak area \= value in Peak Area for that particular sample when Compound Name \= NIS Compound being assessed. The mean NIS Peak area in cal standard points is the average value in Peak Area of every sample with Sample Type \= Cal Std for that NIS Compound.  
    3. Flagged data if criteria outside of 50-150% is not met.   
 9. Instrument Blank  
-   1. Because MDL/MRL censoring has already been applied, any values of compounds not from EIS or NIS compound list that are observed in instrument blank samples should be flagged for QC concern. Instrument blank samples are denoted by Sample Type \= “Blank” from master list.  
+   1. Because MDL/MRL censoring has already been applied, any values of compounds not from EIS or NIS compound list that are observed in instrument blank samples should be flagged for QC concern. Instrument blank samples are denoted by Sample Type \= “Matrix Blank” from master list.  
 10. Check Standard  
-    1. The calculated amount value for each compound (not in NIS and EIS compound list) in samples denoted by Sample Type \= Check Standard should be within 70-130% of the value in Calculated Amount in the cal standard point with matching theoretical values.   
+    1. The calculated amount value for each compound (not in NIS and EIS compound list) in samples denoted by Sample Type \= “Chk Std” should be within 70-130% of the value in Calculated Amount in the cal standard point with matching theoretical values.   
 11. Final Output  
     1. Censored Data  
     2. QC Report   

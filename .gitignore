@@ -1,0 +1,20 @@
+# Raw instrument data — unpublished lab measurements.
+# This repository is public. Never commit real exports.
+*_RawData/
+*Quantitation_ByCompound*.csv
+
+# Synthetic fixtures are safe to commit and must survive the rule above.
+!tests/fixtures/**/*.csv
+
+# Scientist inputs: machine-specific folder paths and per-run answers.
+answers.yaml
+
+# Editor settings holding an interpreter path specific to this machine.
+.vscode/
+
+# Python / Jupyter
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
