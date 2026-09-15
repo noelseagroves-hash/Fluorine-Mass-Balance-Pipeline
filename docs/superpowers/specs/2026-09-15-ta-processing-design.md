@@ -103,7 +103,26 @@ scientist responsible for defending these numbers can read every operation in pl
 The accepted cost is that notebook JSON produces poor pull-request diffs. Revisit if
 the notebook becomes unreviewable.
 
-### 6. Real data stays out of the repository
+### 6. Template in the repository, batch runs outside it
+
+`TA_Processing.ipynb` in the repository root is a template: the code with the
+per-batch inputs left blank. A batch is processed in a copy under `runs/`, which
+is gitignored.
+
+This keeps the shared code reviewable while batch masses, results and figures stay
+local, and it makes each run a frozen record — a later fix to the template cannot
+reach back and silently change a result that has already been reported. The cost
+is that a fix does not reach old runs either; re-running a batch against the
+current template is a deliberate act, which is the correct default for results
+that have been published or handed to a TA.
+
+A run copy belongs to whoever is running that batch, who is free to edit it
+however they like — nothing in a run reaches anyone else. Only changes intended
+for everyone go through the template, on a branch and as a pull request. Review
+is reserved for the shared code rather than imposed on someone's own working
+analysis.
+
+### 7. Real data stays out of the repository
 
 The repository is public and the exports are unpublished measurements. Real data is
 referenced by a path in `answers.yaml` and both are gitignored. A small synthetic

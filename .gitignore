@@ -3,6 +3,11 @@
 *_RawData/
 *Quantitation_ByCompound*.csv
 
+# Batch runs. TA_Processing.ipynb in the repository root is the template and
+# stays blank; a run is a copy of it inside runs/, filled in with that batch's
+# phase, amounts and results. Those copies and their outputs stay local.
+runs/
+
 # Synthetic fixtures are safe to commit and must survive the rule above.
 !tests/fixtures/**/*.csv
 
