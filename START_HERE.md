@@ -8,14 +8,20 @@ Run.
 
 1. Install [Miniconda](https://www.anaconda.com/download/success) (pick the
    Windows 64-bit installer, accept the defaults).
-2. Open the **Anaconda Prompt** from the Start menu and run:
+2. Open the **Anaconda Prompt** from the Start menu, go to this folder, and run:
 
    ```
-   conda install -y -c conda-forge --override-channels pandas pyyaml jupyter
+   conda env create -f environment.yml
+   conda activate fluorine
+   python -m ipykernel install --user --name fluorine --display-name "Python (fluorine)"
    ```
+
+   The last line makes the environment selectable as a kernel in VS Code.
 
 3. Install [VS Code](https://code.visualstudio.com/), then from its Extensions
    panel install **Python** and **Jupyter** (both by Microsoft).
+4. Copy this batch's raw export folder onto the machine. It is not in the
+   repository — the exports are unpublished data and stay out of version control.
 
 ## Every batch: start a run
 
