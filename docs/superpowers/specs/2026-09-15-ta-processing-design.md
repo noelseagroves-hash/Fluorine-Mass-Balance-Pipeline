@@ -156,13 +156,50 @@ These need a decision before the section that depends on them is implemented.
    "looked for and not found" is information §9's blank assessment wants.
 3. **EIS theoretical value** (blocks §7). The spec says `5000 ng/L`; the data carries
    `ISTD Amount = 4795`. Unresolved whether the constant or the column is correct.
-4. **Multiple spike pairs** (blocks §6). §6.1.3 describes selecting "the" low spike
-   sample, but the real batch contains a low and high spike for each matrix (Oyster
-   and Chicken). §6 must handle a set of spike samples, not one pair.
+4. ~~**Multiple spike pairs** (blocks §6).~~ **Resolved 2026-09-22.** §6 takes a
+   `SPIKE_SETS` mapping of matrix name to its low spike, high spike and background
+   samples, so any number of matrices works. This batch has two, Oyster and Chicken.
 5. **Values the spec calls hard-coded** (blocks §6 and §7). These exist nowhere in
    the exports and can only come from the scientist. Noel supplies each one when its
    section is reached, rather than any of it being guessed:
-   - spike factor per compound (§6.1.1)
+   - ~~spike factor per compound (§6.1.1)~~ **supplied 2026-09-22**, now the
+     `SPIKE_FACTORS` table in §6
    - the NIS compound list (§7.2)
    - the NIS-to-EIS assignments used by Method 2 (§7.3), including which EIS
      compounds have no corresponding NIS
+
+
+## §6 spike recovery — departures and decisions (2026-09-22)
+
+- **Results live in their own table.** §6.1.6 and §6.1.9 put nominal concentrations
+  and recoveries as columns on the compound list, which assumes a single spike pair.
+  With a pair per matrix that would need four columns per quantity, so §6 builds
+  `spike_table`, one row per compound per matrix per level.
+- **Sample masses are not asked for twice.** §6.1.5 asks the scientist to input the
+  mass of each spike sample, but §4 already holds every Unknown sample's amount.
+  §6 reads `sample_table['amount']`, so the two cannot disagree.
+- **Six compounds are named differently by the instrument than by the method.** The
+  method writes `10:2 FTCA`, `8:2 FTCA`, `6:2 FTCA`, `7:3 FTCA`, `5:3 FTCA` and
+  `3:3 FTCA`; the exports call the same compounds `FDEA`, `FOEA`, `FHEA`, `FhpPA`,
+  `FpePA` and `FprPA`. `SPIKE_FACTORS` is keyed to the export names with the method
+  name in a comment. All six carry a factor of 1, so nothing numeric turns on it.
+  A mismatch between the factor table and the batch's compounds raises rather than
+  silently dropping compounds out of the recovery table.
+- **A censored background averages over what was detected.** Noel's decision,
+  2026-09-22. §5 censors most background results, so the background mean is taken
+  over uncensored values only, and a compound detected in no background sample is
+  treated as having no measurable background. `backgrounds_detected` records how
+  many samples each mean rests on. The alternatives considered and rejected were
+  counting a non-detect as zero, and substituting half the limit.
+- **Oyster background is the M oysters only** (`TA_04`–`TA_06`), not all nine, since
+  the spikes were made from M oyster material. Noel's decision, 2026-09-22.
+- **The 70–130% window is applied in §6.** The spec states it only for EIS recovery
+  in §7.6, but Noel confirmed on 2026-09-22 that it governs spike recovery too.
+  `RECOVERY_MIN_PCT` and `RECOVERY_MAX_PCT` sit with the method constants so §7 can
+  use the same pair.
+- **A spiked result that is itself censored is flagged, not skipped.** It gets
+  `no recovery, spiked result censored` rather than an empty cell, because an
+  unmeasurable spike is a QC finding.
+
+**Not yet reviewed by Noel.** The arithmetic is verified against the raw exports,
+but the chemistry has not been signed off. See the banner at the top of `CLAUDE.md`.

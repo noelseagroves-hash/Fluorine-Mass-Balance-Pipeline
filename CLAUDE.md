@@ -1,5 +1,42 @@
 # Working on this project
 
+> ## ⚠️ READ THIS FIRST — §6 IS NOT SIGNED OFF
+>
+> **Before proposing §7 or anything else, tell Noel that §6 spike recovery is
+> still waiting on their check of the spike calculations.** Do not treat §6 as
+> finished and do not start the next section until they have confirmed it.
+>
+> Left open at the end of the 2026-09-22 session:
+>
+> 1. **Noel has not yet checked the §6 spike calculations.** The code is
+>    verified — assertions pass, and PFOS Oyster low was re-derived by hand from
+>    the raw CSV to 92.0%. What is unverified is the *chemistry*: whether the
+>    nominal concentrations, the background subtraction and the resulting
+>    recoveries are right. Start the session here.
+> 2. **34 of 180 recoveries are flagged** outside the 70–130% window, and 31 of
+>    45 compounds pass everywhere. Worth raising specifically: `NaDONA` fails in
+>    Chicken (246–267%) but passes in Oyster (77–91%), which points at the matrix
+>    rather than the compound; `FpeSA-I` Chicken low reads 434% off a background
+>    detected in a single blank; `FpePA` is 0.03% in Oyster high and censored in
+>    the other three. These are results to interpret, not necessarily bugs.
+> 3. **The spec has not been updated for §6.** Noel was asked and had not
+>    answered. Per the rule below, ask again — never edit the spec unprompted.
+>    The edits §6 needs: §6.1.3/6.1.4 "the" low and high spike sample → a set
+>    grouped by matrix; §6.1.5 asks for sample masses §4 already has, so the code
+>    reuses them rather than asking twice; §6.1.6 nominal concentrations in the
+>    compound list → the per-matrix `spike_table`; a non-detect background is
+>    averaged over detected values only; and the 70–130% window belongs in §6,
+>    which currently states it only for EIS in §7.6.
+> 4. **The §6 fill-in block is 57 lines** and about half is name-validation that
+>    is now the third near-copy (§4 masses, §5 method blanks, §6 spike sets). §7
+>    needs a fourth for the NIS list and NIS-to-EIS assignments. Factor it into
+>    one small named helper *before* writing §7, not after.
+> 5. **The template now carries this batch's values**, by Noel's explicit
+>    decision on 2026-09-22, so `new_run.py` copies start pre-filled with the
+>    oyster masses. The validation catches sample *names* that aren't in a new
+>    batch but will not catch a *mass* that happens to be valid. Flag this when
+>    the next batch starts.
+
 Notes for Claude. `START_HERE.md` is the equivalent for a lab member running a
 batch; read that too, since it describes what the pipeline is for.
 
