@@ -144,8 +144,10 @@ begins.
 | 6 | §6 Spike recovery | Nominal concentration per matrix and level, background means and the samples each rests on, recoveries against the 70–130% window |
 | 7 | §7 EIS recovery | Reference areas per EIS, Method 1 recovery per sample and matrix, Method 2 concentration in ng/L against its theoretical, both against the 50–150% window |
 | 8 | §8 NIS sensitivity | Reference areas per NIS across the cal standards, sensitivity for every sample and sample type against the 50–150% window |
+| 9 | §9 Instrument blanks | Target compounds surviving §3 and §5 censoring in a Matrix Blank, ranked by how far above their own limit they sit |
+| 10 | §10 Check standards | Each check standard against the cal standard at its own theoretical value, per compound, against the 70–130% window |
 
-§1–§8 are implemented and verified against the 26_08_04 Oyster batch. §9–§11 remain
+§1–§10 and §11.2 are implemented and verified against the 26_08_04 Oyster batch. §11.1, §11.3 remain
 out of scope until the section before them is confirmed correct on real data, since
 each consumes the output of the ones before and an error propagates.
 
@@ -336,3 +338,63 @@ either compound.
 The effect is small and in a known direction: it depresses both references
 slightly, which nudges the percentages built on them up. Worth confirming against
 the next batch, alongside the fluorotelomer sulfonate observation in §7.
+
+
+## §9 and §10 — decisions (2026-09-23)
+
+Both signed off by Noel, 2026-09-23. Neither needed a correction; the spec was
+right about what to compute. What was added was what the numbers mean.
+
+- **§9's concentrations are notional, and the output now says so.** An instrument
+  blank holds no sample, so §4 gives it the batch's largest EF — the smallest
+  sample's — to put it on the same basis as §5's limits. A reported value is
+  therefore "what this would amount to in the smallest sample of the batch",
+  0.41 g here, which is the pessimistic end. The raw ng/L is reported alongside,
+  free of that assumption. Noel asked what the units were, which is what surfaced
+  it.
+- **§9 ranks by multiple of the limit, not by concentration.** Reordering moved
+  `Br-PFHxS` and `Br-PFOS` from near the bottom to fourth and sixth at 8.6 and
+  8.3 times their limits, on concentrations of 0.032 and 0.035 ng/g. Their limits
+  are simply much lower. Sorting by bare concentration ranked them wrongly. The
+  per-flag list still descends by concentration, as §9.1.1 requires.
+- **§10 matches per compound and theoretical value.** 29 compounds use round
+  check levels; 16 carry purity-corrected ones, the same 16 with spike factors
+  below 1.
+- **§10 flags an unpaired check standard rather than dropping it.** A left join,
+  not an inner one. `HFPO-DA` at 100 would otherwise have vanished, leaving 224
+  comparisons with nothing saying one was missing.
+- **§10 discovers its check standards from the data.** Noel's requirement: it
+  must assess whatever any future batch contains. A batch with none says so and
+  skips.
+
+### The `.assign()` bug, worth not repeating
+
+Testing §10 against synthetic batches found a real defect. `chk` and `cal` were
+built by filtering `master` and then assigning a numeric column taken from the
+*parent* frame. That alignment holds only while the filtered frame is non-empty:
+on a batch with no check standards the empty frame took the parent's index and
+invented 3,589 rows with no sample name and no compound but a real value in them.
+
+The fix is to compute the derived column on the subset, which §9 already did.
+Worth checking any future section that filters then assigns. The current batch
+could never have shown this, because its check standards exist — it was only
+visible by running the section against a batch that lacked them.
+
+## §11.2 — the QC report (2026-09-23)
+
+Noel's requirement was that gathering stay universal across future sections, so
+sections register themselves in `QC_SOURCES` rather than §11 knowing about each
+one. A section added later adds one line.
+
+The assertion that carries the weight is that the gathered total equals the sum
+of what each section flagged. A source left out, or pointed at a renamed column,
+would otherwise drop findings silently and leave the report looking clean by
+being incomplete.
+
+Roll-ups by sample and by compound come before the list because they decide the
+response. On this batch they separate two things no single section could show:
+the chicken samples carry flags across three and four sections each, a matrix
+failing several independent tests, while instrument blanks A4 and A3 carry 33 and
+27 flags from §9 alone, which is two bad injections. `FDEA` is the only compound
+flagged in three or more sections — poor spike recovery in both matrices, four
+instrument blanks at up to 18.5x its limit, and a check standard at 68.8%.
