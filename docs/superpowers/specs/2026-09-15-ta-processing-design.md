@@ -142,8 +142,9 @@ begins.
 | 4 | §4 Extraction factor | Per-sample EF, the ng/L to ng/g conversion, results in the batch's units |
 | 5 | §5 MDL/MRL | Per-compound MDL or MRL, how many method blanks each rests on, counts censored at the limit |
 | 6 | §6 Spike recovery | Nominal concentration per matrix and level, background means and the samples each rests on, recoveries against the 70–130% window |
+| 7 | §7 EIS recovery | Reference areas per EIS, Method 1 recovery per sample and matrix, Method 2 concentration in ng/L against its theoretical, both against the 50–150% window |
 
-§1–§6 are implemented and verified against the 26_08_04 Oyster batch. §7–§11 remain
+§1–§7 are implemented and verified against the 26_08_04 Oyster batch. §8–§11 remain
 out of scope until the section before them is confirmed correct on real data, since
 each consumes the output of the ones before and an error propagates.
 
@@ -163,8 +164,19 @@ These need a decision before the section that depends on them is implemented.
    dropped, because "looked for and not found" is information §9's blank assessment
    wants. §6 treats such a background as a non-detect, contributing no value to the
    background mean.
-3. **EIS theoretical value** (blocks §7). The spec says `5000 ng/L`; the data carries
-   `ISTD Amount = 4795`. Unresolved whether the constant or the column is correct.
+3. ~~**EIS theoretical value** (blocks §7).~~ **Resolved 2026-09-23.** §7 reads the
+   theoretical value per compound from the `ISTD Amount` column, not the spec's hard
+   coded `5000 ng/L`. Noel confirmed these are properties of the standard used.
+
+   The question was originally framed as `5000` against `4795`, but `4795` was only
+   M8PFOS's value, seen because the PFOS export was the one inspected. Across all 78
+   exports the column takes eight distinct values over 25 EIS compounds: 18 carry
+   5000, while M3PFBS is 4660, M2-4:2FTS 4690, M3PFHxS 4740, M2-6:2FTS 4755, M8PFOS
+   4795, M2-8:2FTS 4800 and M2-10:2FTS 4830. The seven that differ are the sulfonates
+   and fluorotelomer sulfonates. The value is constant per EIS compound across every
+   sample and file, so it is a property of the labelled standard rather than of the
+   run. Hard coding 5000 would understate those seven recoveries by up to 6.8%, which
+   is enough to move a compound across the 70-130% window.
 4. ~~**Multiple spike pairs** (blocks §6).~~ **Resolved 2026-09-22.** §6 takes a
    `SPIKE_SETS` mapping of matrix name to its low spike, high spike and background
    samples, so any number of matrices works. This batch has two, Oyster and Chicken.
@@ -173,9 +185,11 @@ These need a decision before the section that depends on them is implemented.
    section is reached, rather than any of it being guessed:
    - ~~spike factor per compound (§6.1.1)~~ **supplied 2026-09-22**, now the
      `SPIKE_FACTORS` table in §6
-   - the NIS compound list (§7.2)
-   - the NIS-to-EIS assignments used by Method 2 (§7.3), including which EIS
-     compounds have no corresponding NIS
+   - ~~the NIS compound list (§7.2)~~ **supplied 2026-09-23**: M3PFBA, MPFHxA,
+     MPFOA, MPFNA, MPFDA, MPFHxS, MPFOS
+   - ~~the NIS-to-EIS assignments used by Method 2 (§7.3)~~ **supplied
+     2026-09-23**, seven matched pairs; an EIS without a matching NIS gets no
+     Method 2 value rather than being assigned one
 
 
 ## §6 spike recovery — departures and decisions (2026-09-22)
@@ -217,3 +231,64 @@ through the per-sample EF to 0.293795 ng/g and agrees with the pipeline. Note th
 order of operations that trace established: each background sample is converted to
 ng/g using its own mass *before* the mean is taken, which is not the same number as
 averaging the raw ng/L values and applying one EF built from the mean mass.
+
+
+## §7 EIS recovery — departures and decisions (2026-09-23)
+
+Signed off by Noel, 2026-09-23.
+
+- **The EIS peak area is read from the labelled standard's own row.** §7.4 says
+  to take it from the `ISTD Area` column on the target rows. §2 drops a target
+  row whose retention time failed, and the EIS area on that row goes with it —
+  163 of 425 sample/EIS pairs lost, including 13 of the equipment blank's 25.
+  Each labelled standard is exported as its own file, and that row survives
+  independently: 2 of 425 lost. Where both sources exist they agree to within
+  0.5 counts, and a check asserts it so a real divergence is still caught.
+- **EIS is derived, not listed.** §1 already splits labelled standards from
+  targets by whether a compound has an internal standard of its own. EIS is
+  those labelled standards minus the hard coded NIS list, asserted equal to the
+  compounds the exports use as an ISTD. Noel's rule: a compound is EIS or NIS,
+  never both. Several names differ by two characters (`M3PFBA`/`MPFBA`,
+  `MPFHxS`/`M3PFHxS`, `MPFOS`/`M8PFOS`), so a misspelling raises.
+- **Method 2 runs only on matched pairs.** §7.3 says to prompt for a NIS
+  whenever an EIS lacks one. Noel's decision, 2026-09-23: the correction is
+  valid only where the NIS matches properly, so the other 18 EIS compounds keep
+  their Method 1 value, get no Method 2 value, and are not flagged for it.
+- **Method 2 compares ng/L in the vial, with no sample weight.** Noel's
+  decision, 2026-09-23. §7.5 as written divides by sample weight, which would
+  make recovery a function of the weighing: on this batch it moved M8PFOS Oyster
+  between 91.8% and 169.3% across samples of one matrix purely by weight. The
+  same amount of EIS goes into every sample whatever it weighed, which is why
+  `ISTD Amount` is one value per compound. The theoretical cancels between the
+  two steps, but both steps are kept in the code because the ng/L concentration
+  is what the scientist checks the chemistry against.
+- **`Detected Mass` is an m/z, not an amount.** It holds 498.93 for PFOS across
+  a calibration curve running 10 to 50000 ng/L. §7.5 uses it as the mass of NIS
+  and EIS in the response factor; carried through the algebra those terms and
+  the NIS amount cancel, so none is needed.
+- **The EIS window is 50–150%, separate from §6's 70–130%.** Noel's decision,
+  2026-09-23; §7.6 stated 70–130, which is the spike window. An EIS is carried
+  through the whole extraction and absorbs more variation than a spike measured
+  against a known amount of matrix. Both are printed on every run.
+- **Matrices are named by the scientist**, as a mapping of matrix to samples
+  plus a separate list for samples belonging to none, so a future batch of soils
+  from several locations needs only different names. Every Unknown sample must
+  appear exactly once.
+- **The reference pools cal standards with instrument blanks**, as §7.4 says.
+  Confirmed by Noel 2026-09-23 after it was queried: the instrument blanks
+  outnumber the cal standards 29 to 12 and read higher, so pooling lowers
+  recoveries rather than raising them.
+
+### Open observation — fluorotelomer sulfonate reference stability
+
+Not a defect, and not resolved. The spread of the 41 reference areas rises with
+chain length: M2-4:2FTS 9.7% CV, M2-6:2FTS 12.8%, M2-8:2FTS 18.9%, M2-10:2FTS
+33.6%, against 7.3% for M8PFOS. M2-10:2FTS's reference samples span a 3.4-fold
+range, so the 100% mark its recoveries are measured against is itself unstable.
+These four also read high in Oyster (137–183% on Method 1) and none of them has
+a matching NIS, so Method 2 offers no cross-check for exactly the compounds
+whose reference is weakest.
+
+Noel could not say on 2026-09-23 whether the trend is expected for these
+standards. Worth checking against the next batch to tell a property of the
+standards from something specific to this run.
