@@ -163,8 +163,19 @@ These need a decision before the section that depends on them is implemented.
    dropped, because "looked for and not found" is information §9's blank assessment
    wants. §6 treats such a background as a non-detect, contributing no value to the
    background mean.
-3. **EIS theoretical value** (blocks §7). The spec says `5000 ng/L`; the data carries
-   `ISTD Amount = 4795`. Unresolved whether the constant or the column is correct.
+3. ~~**EIS theoretical value** (blocks §7).~~ **Resolved 2026-09-23.** §7 reads the
+   theoretical value per compound from the `ISTD Amount` column, not the spec's hard
+   coded `5000 ng/L`. Noel confirmed these are properties of the standard used.
+
+   The question was originally framed as `5000` against `4795`, but `4795` was only
+   M8PFOS's value, seen because the PFOS export was the one inspected. Across all 78
+   exports the column takes eight distinct values over 25 EIS compounds: 18 carry
+   5000, while M3PFBS is 4660, M2-4:2FTS 4690, M3PFHxS 4740, M2-6:2FTS 4755, M8PFOS
+   4795, M2-8:2FTS 4800 and M2-10:2FTS 4830. The seven that differ are the sulfonates
+   and fluorotelomer sulfonates. The value is constant per EIS compound across every
+   sample and file, so it is a property of the labelled standard rather than of the
+   run. Hard coding 5000 would understate those seven recoveries by up to 6.8%, which
+   is enough to move a compound across the 70-130% window.
 4. ~~**Multiple spike pairs** (blocks §6).~~ **Resolved 2026-09-22.** §6 takes a
    `SPIKE_SETS` mapping of matrix name to its low spike, high spike and background
    samples, so any number of matrices works. This batch has two, Oyster and Chicken.
