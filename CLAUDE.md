@@ -31,7 +31,13 @@
 >    is now the third near-copy (§4 masses, §5 method blanks, §6 spike sets). §7
 >    needs a fourth for the NIS list and NIS-to-EIS assignments. Factor it into
 >    one small named helper *before* writing §7, not after.
-> 5. **The template now carries this batch's values**, by Noel's explicit
+> 5. **The raw data does not travel with this repo.** `*_RawData/` and `runs/`
+>    are gitignored because the repository is public, so a fresh clone has the
+>    code but no exports and no run folder. To re-run the verification on another
+>    device, Noel has to copy `26_08_04_Oyster_RawData/` across by hand, then
+>    `python new_run.py <name>` and point `answers.yaml` at it. Ask for the data
+>    rather than assuming the pipeline can be executed.
+> 6. **The template now carries this batch's values**, by Noel's explicit
 >    decision on 2026-09-22, so `new_run.py` copies start pre-filled with the
 >    oyster masses. The validation catches sample *names* that aren't in a new
 >    batch but will not catch a *mass* that happens to be valid. Flag this when
