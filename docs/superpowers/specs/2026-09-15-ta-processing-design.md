@@ -139,21 +139,30 @@ begins.
 | 1 | §1 Readfile | Observed sample types, per-file row counts, compound list, `N/F` rows, retained column dtypes |
 | 2 | §2 RT Validation | Per-compound mean Cal Std RT, count and identity of rows failing the ±0.4 min window |
 | 3 | §3 LOQ/ULOQ | Per-compound LOQ and ULOQ, counts censored at each bound |
+| 4 | §4 Extraction factor | Per-sample EF, the ng/L to ng/g conversion, results in the batch's units |
+| 5 | §5 MDL/MRL | Per-compound MDL or MRL, how many method blanks each rests on, counts censored at the limit |
+| 6 | §6 Spike recovery | Nominal concentration per matrix and level, background means and the samples each rests on, recoveries against the 70–130% window |
 
-Sections §4–§11 are deliberately out of scope until §1–§3 are confirmed correct on
-real data. Later steps all consume §1–§3's output, so an error here propagates.
+§1–§6 are implemented and verified against the 26_08_04 Oyster batch. §7–§11 remain
+out of scope until the section before them is confirmed correct on real data, since
+each consumes the output of the ones before and an error propagates.
 
 ## Open questions
 
 These need a decision before the section that depends on them is implemented.
 
-1. **`Sample Name (Batch Ordering)` mapping** (blocks §1). Read as the `Sample Name`
-   column, since §1.3 lists `Sample ID` separately and `Sample Name` holds the
-   batch-order numbering. Needs confirmation.
-2. **N/F rows during RT validation** (blocks §2). An `N/F` row has no RT to validate,
-   because `Method Apex RT` is itself `N/F`. Current intent is to retain the row with
-   `N/F` left in place in `Calculated Amount` rather than dropping it, because
-   "looked for and not found" is information §9's blank assessment wants.
+1. ~~**`Sample Name (Batch Ordering)` mapping** (blocks §1).~~ **Resolved
+   2026-09-23.** Read as the `Sample Name` column, since §1.3 lists `Sample ID`
+   separately and `Sample Name` holds the batch-order numbering. Confirmed by §1–§6
+   running correctly against the real exports, where samples are addressed
+   throughout by `Sample Raw File Name` with `Sample ID` carried alongside as the
+   human-readable label.
+2. ~~**N/F rows during RT validation** (blocks §2).~~ **Resolved 2026-09-23.** An
+   `N/F` row has no RT to validate, because `Method Apex RT` is itself `N/F`. The
+   row is retained with `N/F` left in place in `Calculated Amount` rather than
+   dropped, because "looked for and not found" is information §9's blank assessment
+   wants. §6 treats such a background as a non-detect, contributing no value to the
+   background mean.
 3. **EIS theoretical value** (blocks §7). The spec says `5000 ng/L`; the data carries
    `ISTD Amount = 4795`. Unresolved whether the constant or the column is correct.
 4. ~~**Multiple spike pairs** (blocks §6).~~ **Resolved 2026-09-22.** §6 takes a
@@ -201,5 +210,10 @@ These need a decision before the section that depends on them is implemented.
   `no recovery, spiked result censored` rather than an empty cell, because an
   unmeasurable spike is a QC finding.
 
-**Not yet reviewed by Noel.** The arithmetic is verified against the raw exports,
-but the chemistry has not been signed off. See the banner at the top of `CLAUDE.md`.
+**Signed off by Noel, 2026-09-23.** The arithmetic was verified against the raw
+exports and re-run independently on a second device, and the chemistry has now been
+reviewed. `FhxSA`'s Oyster background mean was traced by hand from the raw CSV
+through the per-sample EF to 0.293795 ng/g and agrees with the pipeline. Note the
+order of operations that trace established: each background sample is converted to
+ng/g using its own mass *before* the mean is taken, which is not the same number as
+averaging the raw ng/L values and applying one EF built from the mean mass.
