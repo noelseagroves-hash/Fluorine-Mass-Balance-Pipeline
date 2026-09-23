@@ -143,8 +143,9 @@ begins.
 | 5 | §5 MDL/MRL | Per-compound MDL or MRL, how many method blanks each rests on, counts censored at the limit |
 | 6 | §6 Spike recovery | Nominal concentration per matrix and level, background means and the samples each rests on, recoveries against the 70–130% window |
 | 7 | §7 EIS recovery | Reference areas per EIS, Method 1 recovery per sample and matrix, Method 2 concentration in ng/L against its theoretical, both against the 50–150% window |
+| 8 | §8 NIS sensitivity | Reference areas per NIS across the cal standards, sensitivity for every sample and sample type against the 50–150% window |
 
-§1–§7 are implemented and verified against the 26_08_04 Oyster batch. §8–§11 remain
+§1–§8 are implemented and verified against the 26_08_04 Oyster batch. §9–§11 remain
 out of scope until the section before them is confirmed correct on real data, since
 each consumes the output of the ones before and an error propagates.
 
@@ -292,3 +293,46 @@ whose reference is weakest.
 Noel could not say on 2026-09-23 whether the trend is expected for these
 standards. Worth checking against the next batch to tell a property of the
 standards from something specific to this run.
+
+
+## §8 NIS sensitivity — decisions (2026-09-23)
+
+Signed off by Noel, 2026-09-23. The spec needed no corrections here: the
+cal-standards-only reference, the `Peak Area` source and the 50–150% window were
+all already right as written. Only two clarifications were added.
+
+- **Every sample means every sample type.** §8.1 says "every sample"; that is
+  read as all 63, not the 17 Unknowns. A NIS goes into every injection and drift
+  shows across the whole run. Cal standards are measured against their own mean
+  and so sit at exactly 100% by construction — a check on the reference rather
+  than a result, and asserted as such.
+- **`NIS_MIN_PCT` and `NIS_MAX_PCT` are their own constants**, not §7's EIS
+  window, despite carrying the same 50–150% today. This measures instrument
+  response; §7 measures extraction recovery. Same reasoning that separated §6
+  from §7.
+
+### What §8 established about §7's chicken result
+
+Chicken NIS sensitivity is 44–66% on M3PFBA, MPFDA, MPFNA and MPFOS, where the
+oysters sit near 100%. Since the NIS never goes through extraction, that is the
+instrument seeing the chicken matrix roughly half as well — ion suppression.
+
+This matters for reading §7, where chicken EIS recovery was 1–6%. Suppression of
+that size accounts for a factor of about two, not for the collapse, so genuine
+extraction loss remains the dominant explanation. This is the §7/§8 separation
+doing the work it exists for: EIS recovery alone could not have distinguished a
+badly extracted sample from a badly measured one.
+
+### Open observation — Cal 12
+
+Not resolved. The top calibration standard reads low for labelled standards in
+two separate sections. MPFOS is 95.6M there against 115–131M across the other
+eleven, about 21% below its mean and the lowest by a clear margin; in §7,
+M6PFDA's reference dipped the same way at Cal 12, to 77.7% of its mean. Two
+different labelled compounds dipping in the same standard, where the native
+analytes are at 50000 ng/L, points at something in that standard rather than at
+either compound.
+
+The effect is small and in a known direction: it depresses both references
+slightly, which nudges the percentages built on them up. Worth confirming against
+the next batch, alongside the fluorotelomer sulfonate observation in §7.
