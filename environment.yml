@@ -1,0 +1,17 @@
+# Environment for running TA_Processing.ipynb.
+#
+#   conda env create -f environment.yml
+#   conda activate fluorine
+#
+# conda-forge only, deliberately. Anaconda's default channels require accepting
+# their terms of service, which carry restrictions on organisational use.
+name: fluorine
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.11
+  - pandas>=2.0
+  - pyyaml
+  - scipy
+  - jupyter
+  - ipykernel
