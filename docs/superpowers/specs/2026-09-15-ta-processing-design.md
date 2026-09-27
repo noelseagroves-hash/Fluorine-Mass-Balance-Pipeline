@@ -1,7 +1,7 @@
 # TA Processing Pipeline — Design Decisions
 
 Date: 2026-09-15
-Status: Approved for implementation, Step 1
+Status: Complete. §1–§11.2 implemented and signed off; §11.3 figures cut 2026-09-27.
 Spec of record: [`TA Code Spec.md`](../../../TA%20Code%20Spec.md)
 
 This document does not replace `TA Code Spec.md`. It records the places where the
@@ -147,7 +147,7 @@ begins.
 | 9 | §9 Instrument blanks | Target compounds surviving §3 and §5 censoring in a Matrix Blank, ranked by how far above their own limit they sit |
 | 10 | §10 Check standards | Each check standard against the cal standard at its own theoretical value, per compound, against the 70–130% window |
 
-§1–§10 and §11.2 are implemented and verified against the 26_08_04 Oyster batch. §11.1, §11.3 remain
+§1–§11.2 are implemented and verified against the 26_08_04 Oyster batch. §11.3 figures was cut rather than built.
 out of scope until the section before them is confirmed correct on real data, since
 each consumes the output of the ones before and an error propagates.
 
@@ -398,3 +398,69 @@ failing several independent tests, while instrument blanks A4 and A3 carry 33 an
 27 flags from §9 alone, which is two bad injections. `FDEA` is the only compound
 flagged in three or more sections — poor spike recovery in both matrices, four
 instrument blanks at up to 18.5x its limit, and a check standard at 68.8%.
+
+
+## The amendments cycle, and cutting the second section (2026-09-23 to 09-27)
+
+The spec's plan was to duplicate §1–§11 into a second section of the notebook and
+run the adjusted data through the copy. Noel agreed on 2026-09-23 to depart from
+it. Duplicating would have put the notebook past 150 cells, made every fix a
+double edit, and let the two copies drift — against the compactness rule that an
+earlier attempt at this project died of.
+
+Instead `EXCLUDE` sits immediately after §1 and the same pipeline runs twice.
+Removals are recorded as data with a required reason, so the list is the audit
+trail. Copying the run folder before amending keeps both passes.
+
+- **The input format is written lines, not Python.** `sample | compound | reason`,
+  separated by `|`, with `all` meaning every one. It began as a list of tuples and
+  was rewritten after a missing comma raised `TypeError` three times, before any
+  validation in the cell could run. Parsing the text means a mistake gets the line
+  number and the nearest valid name instead of a traceback.
+- **Every input keyed by sample or compound had to become exclusion-aware.**
+  `TARGET_COMPOUNDS` and `LABELLED_STANDARDS` are re-derived after the removal, and
+  §4's amounts, §5's blanks, §6's factors and spike sets and §7's matrices treat a
+  removed name as an expected absence rather than a typo. A matrix losing its spike
+  or all its backgrounds is not assessed rather than assessed against an assumed
+  zero. §7's EIS check became asymmetric: a compound used as an ISTD but missing
+  from the list still raises, while an EIS orphaned by removing its target is
+  reported and dropped.
+- **Removals can reach further than the results named.** The cell reports what each
+  one touched by sample type and says so plainly when limits or references will
+  move. It warns and continues; the scientist decides. On this batch removing the
+  three chicken method blanks left every compound on an MRL.
+
+## Delivering one workbook (2026-09-27)
+
+`final_data.xlsx` with seven sheets replaced the three csv files. Noel's reason:
+the workbook holds everything needed to judge a batch, so a run folder should have
+one deliverable rather than four files saying the same thing. `openpyxl` was added
+to `environment.yml`.
+
+## Preparing it for a new user (2026-09-27)
+
+The notebook was rewritten for a lab member with little coding experience. The
+thirteen "Checks" markdown cells went, along with the diagnostic printing that
+existed for dissecting calculations while the sections were being built; printed
+output fell from about 400 lines to 161. All 82 assertions stayed.
+
+The top cell is now the workflow in five steps rather than a development status
+table. `START_HERE.md` was cut back to once-per-machine setup and points at the
+notebook, so the workflow is described in one place instead of two.
+
+**The check that made this safe:** `final_data.xlsx` was captured before any of it
+and compared sheet by sheet afterwards. Every cell of all seven sheets is
+identical apart from the `About` timestamp. Any refactor of this notebook should
+be held to the same test.
+
+## Two process lessons worth keeping
+
+**Verify in the environment the scientist uses.** Every headless run up to
+2026-09-27 used base Python, not `fluorine`. They hold different major versions of
+pandas, and `openpyxl` was in one and not the other — so §11 was reported working
+and then failed for Noel. The numbers happened to agree when checked, but that was
+luck. Use `/opt/anaconda3/envs/fluorine/bin/jupyter`.
+
+**A run folder belongs to whoever is running that batch.** Copying the template
+over `runs/2026-08-04-oyster-adjusted/` destroyed Noel's typed `EXCLUDE` list. It
+was recoverable only because it was still in the conversation.
