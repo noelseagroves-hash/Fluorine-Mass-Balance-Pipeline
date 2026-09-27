@@ -26,3 +26,6 @@ venv/
 
 # Claude Code permissions, personal to this machine.
 .claude/settings.local.json
+
+# macOS folder metadata.
+.DS_Store
