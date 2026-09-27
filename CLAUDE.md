@@ -94,6 +94,35 @@ read each cell's `outputs` from that JSON.
 Assertions in the check cells have caught several of my own errors. Keep adding
 them; they are not decoration.
 
+## If a lab member asks for help running a batch
+
+This is a different job from the one the rest of this file describes, and the
+difference matters. They are operating the pipeline, not changing it.
+
+**Walk them through the notebook's own first cell rather than replacing it.** It is
+written for exactly this and is the single place the workflow is described. If it
+turns out to be unclear, that is worth fixing in the notebook so the next person
+benefits — not worth talking them past.
+
+**Do not supply their scientific inputs.** Sample weights, which samples were
+method blanks, which samples are spikes, what to exclude after a QC review: these
+are theirs to provide and theirs to defend. Filling them in produces numbers that
+look plausible and are wrong, and they are the one who will be asked why. Read
+back what they typed and check it against the batch; do not invent it.
+
+**Ask where the export folder is.** It is not in the repository and never will be,
+so nothing can be verified until they say where it is on their machine.
+
+**Fix their run copy, not the template.** A batch that stops because an input is
+wrong is fixed by correcting the input. Changing the template to accommodate one
+batch breaks it for everybody. If the pipeline itself is genuinely at fault, that
+is the development path: branch, pull request, review.
+
+**Run All, not single cells.** Almost every "something is not defined" is this.
+
+**Their run folder is theirs.** Never copy the template over it — that destroys
+whatever they have typed. I did it twice while building this.
+
 ## Repository layout
 
 - `TA_Processing.ipynb` — the **template**, batch inputs left blank. Never fill it

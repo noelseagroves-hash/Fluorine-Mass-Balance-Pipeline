@@ -43,6 +43,10 @@ That makes `runs/2026-08-04-oyster/` with a copy of the notebook in it. Open
 **Python (fluorine)** as the kernel, and read the first cell. It tells you the
 rest.
 
+**Use Run All, not one cell at a time.** Each section is built from the ones above
+it, so a cell run on its own fails with a message about something not being
+defined. That is the commonest way to get stuck, and it is not a real error.
+
 **Never type your batch's numbers into the notebook in the main folder.** That one
 is the shared template. `new_run.py` refuses to overwrite an existing run, so it
 cannot clobber someone else's work.
