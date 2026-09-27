@@ -1,28 +1,39 @@
 # Working on this project
 
-Notes for Claude. `START_HERE.md` is the equivalent for a lab member running a
-batch; read that too, since it describes what the pipeline is for.
+Notes for Claude. `START_HERE.md` covers setting a machine up; the notebook's own
+first cell is where the batch workflow is described, and it is the single place
+that describes it.
 
 ## What this is
 
 `TA_Processing.ipynb` implements `TA Code Spec.md`: raw targeted-analysis exports
-from an LC-MS in, a censored and QC-assessed PFAS dataset out. Eleven spec
-sections, built one at a time.
+from an LC-MS in, a censored and QC-assessed PFAS dataset out.
 
-The notebook's first cell carries a status table saying which sections exist. That
-table and `git log` are the source of truth for progress — trust them over anything
-written here.
+**The pipeline is complete.** §1 to §11.2 are implemented, verified against the
+26_08_04 Oyster batch and signed off. §11.3 figures was cut by Noel on 2026-09-27
+rather than built. Work from here is maintenance and the occasional new batch, not
+construction, so the build-order rhythm below no longer applies — but the rules
+about how it is built still do.
+
+The notebook's first cell is written for a new lab member, not for Noel and not for
+progress tracking. `git log` is the source of truth for what changed.
 
 ## How Noel wants this built
 
-**One spec section per increment.** Propose the next single section, get approval,
-implement it, then show evidence it works on real data — actual row counts,
-computed values, named samples — before proposing the next. Do not batch sections.
+**One change per increment.** Propose it, get approval, implement it, then show
+evidence it works on real data — actual row counts, computed values, named samples
+— before proposing the next. This applied to building the sections and applies
+equally to changing them.
 
-**Then prompt to update the spec.** Once Noel says a section is good, ask whether
-to update `TA Code Spec.md` to match what the code does, naming the specific edits.
-Never edit the spec unprompted. This is why the spec still describes the pipeline
+**Then prompt to update the spec.** Once Noel says a change is good, ask whether to
+update `TA Code Spec.md` to match what the code does, naming the specific edits.
+Never edit the spec unprompted. This is why the spec describes the pipeline
 accurately rather than drifting from it.
+
+**When changing finished code, prove the output did not move.** Capture
+`final_data.xlsx` before touching anything, then compare it sheet by sheet
+afterwards; the `About` sheet's timestamp is the only cell allowed to differ. A
+refactor that changes a number is a bug, and the comparison is how you know.
 
 **Compactness is a hard requirement.** An earlier attempt at this project was
 abandoned because the code grew too long for Noel to keep a handle on. Keep
@@ -31,11 +42,16 @@ repeated part into a small named helper rather than letting it sprawl. Keep
 verification prints in cells separate from processing logic. Report the line count
 per section, and flag a section trending long before it becomes a problem.
 
-**Noel is a scientist, not a programmer.** Every section gets a plain-language
-markdown cell above it saying what it does and why, in terms a chemist reads.
-Prefer explicit visible pandas operations over clever abstractions. Do not let a
-Python rule become something Noel has to learn around — `solid`, `liquid` and
-`auto` are defined as bare words in §4 precisely so that quoting never matters.
+**The audience is a lab member with little coding experience.** Every section gets
+a plain-language markdown cell above it saying what it does and why, in terms a
+chemist reads. Prefer explicit visible pandas operations over clever abstractions.
+
+Do not let a Python rule become something they have to learn around. `solid`,
+`liquid` and `auto` are bare words in §4 so quoting never matters, and `EXCLUDE` in
+the amendments cell takes written lines separated by `|` rather than a list of
+tuples — that one was rewritten after a missing comma raised `TypeError` three
+times before any validation could run. When an input cell can be got wrong, the
+error must name the line and suggest the nearest valid name.
 
 **All logic lives inline in the notebook**, not in an imported package. This was a
 deliberate choice, accepting worse pull-request diffs, so that every step is
@@ -48,16 +64,28 @@ them — a pandas `str` dtype that refuses to hold numbers, and instrument blank
 being compared against limits in a different unit — were invisible to inspection
 and only appeared when real arithmetic hit real values.
 
+A third was found by running the pipeline against batches it had not seen:
+filtering a dataframe and then assigning a column taken from the parent aligns
+correctly only while the filtered frame is non-empty. On a batch with no check
+standards the empty frame took the parent's index and invented 3,589 rows. Test a
+section against a batch that lacks what it looks for, not only against this one.
+
 So: implement, run, and read the output before claiming anything works.
 
 The batch lives in `runs/<name>/`, gitignored. Execute it headlessly rather than
-asking Noel to run it:
+asking Noel to run it, **using the fluorine environment's jupyter, not the base
+one**:
 
 ```
 cd runs/<name>
-jupyter nbconvert --to notebook --execute --allow-errors \
-    --output <somewhere-temporary>/run.ipynb TA_Processing.ipynb
+/opt/anaconda3/envs/fluorine/bin/jupyter nbconvert --to notebook --execute \
+    --allow-errors --output <somewhere-temporary>/run.ipynb TA_Processing.ipynb
 ```
+
+Base and `fluorine` hold different major versions of pandas. Verifying in base
+proved nothing about what Noel's kernel would do, and `openpyxl` was present in one
+and missing from the other, which is how §11 came to fail for Noel after I had
+reported it working.
 
 `--allow-errors` is important: without it nbconvert writes no output notebook when
 a cell raises, so you get the traceback but not the prints that led to it. Then
@@ -85,13 +113,25 @@ Miniconda, with packages from **conda-forge using `--override-channels`**. Do no
 use Anaconda's default channels: they require accepting terms of service, which is
 not Claude's to accept on Noel's behalf. `environment.yml` captures this.
 
-## What only Noel can supply
+## What only the scientist can supply
 
 Some values exist nowhere in the data. Ask rather than infer:
 
+- each sample's weight or volume, and the batch's phase (§4)
 - which samples served as method blanks (§5)
-- the spike factor per compound, and the low and high spike amounts in ng (§6)
-- the NIS compound list, and the NIS-to-EIS assignments (§7)
+- the low and high spike amounts in ng, and which samples are the spikes and their
+  backgrounds (§6)
+- which samples belong to which matrix (§7)
 
 The spec calls several of these "hard coded". They are not in the exports, and
 guessing them would produce numbers that look plausible and are wrong.
+
+Method constants are settled and live in the notebook: the spike factor per
+compound (§6), the NIS list and the NIS-to-EIS pairs (§7), and the compound renames
+that strip the exports' `-I` suffix (§1). They describe the method rather than a
+batch, so a new batch does not restate them — but confirm them with Noel if the
+method changes.
+
+**A run folder belongs to whoever is running that batch.** Do not copy the template
+over it: that destroyed Noel's typed `EXCLUDE` list once. If the template changes
+and a run needs it, say so and let them decide.
