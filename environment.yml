@@ -13,5 +13,6 @@ dependencies:
   - pandas>=2.0
   - pyyaml
   - scipy
+  - openpyxl          # writing final_data.xlsx in §11
   - jupyter
   - ipykernel
