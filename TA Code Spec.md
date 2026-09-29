@@ -2,9 +2,9 @@ TA Code Spec
 
 	This is the spec used for the basis of the Ruyle Lab code used for Processing of  Targeted Analysis Data. This document will outline in great detail and in written word, exactly what is done to the raw data in order to produce the final output dataset.
 
-General Idea: Scientist will provide input data files. Code will output MDLs/MRLs, calculated amount values for each sample, Spike recovery, EIS Recovery, as well as a list of QC Flags. Scientist will interpret the list of QC Flags and decide which results to remove. Those removals are recorded in an amendments cell near the top of the notebook, one per line, each with the reason for it, and the notebook is then run again: every limit, recovery and concentration is derived afresh without them. The second pass is the same code rather than a copy of it in another section, which was the original plan — duplicating eleven sections would have doubled the notebook and let the two copies drift. What makes the adjustments visually present is the amendments list itself, which states what was removed and why, and the fact that a run is processed in its own folder: copying the folder before amending keeps both passes side by side. 
+General Idea: Scientist will provide input data files. Code will output MDLs/MRLs, calculated amount values for each sample, Spike recovery, EIS Recovery, as well as a list of QC Flags. Scientist will interpret the list of QC Flags and decide which results to remove. Those removals are recorded in an amendments cell near the top of the notebook, one per line, each with the reason for it, and the notebook is then run again: every limit, recovery and concentration is derived afresh without them. The second pass is the same code, but should be performed in a separate run so the results of both can be held. The adjustments are visually present in the amendments list, which states what was removed and why, and the fact that a run is processed in its own folder: copying the folder before amending keeps both passes side by side. 
 
-The notebook kept in the repository is a template, holding the code with the per-batch inputs left blank. A batch is processed in a copy of it, made by new\_run.py, which lives outside version control along with that batch's amounts, results and figures. This keeps the shared code reviewable while a batch's data stays local, and makes each run a fixed record of how that batch was processed, so a later change to the template cannot silently alter a result already reported. A run copy belongs to whoever is running that batch and is theirs to change; only changes intended for everyone are made in the template. START\_HERE.md describes the procedure.
+The notebook kept in the repository is a template, holding the code with the per-batch inputs left blank. A batch is processed in a copy of it, made by new\_run.py, which lives outside version control along with that batch's amounts, results and figures. This keeps the shared code reviewable while a batch's data stays local for each scientists run on their device, and makes each run a fixed record of how that batch was processed, so a later change to the template does not silently alter a result already reported. A run copy belongs to whoever is running that batch and is theirs to change; only changes intended for everyone are made in the template. START\_HERE.md (written by Claude) describes the procedure.
 
 Skeleton:  
 Start →
@@ -23,11 +23,15 @@ Start →
 12. Check Standards
 
 Output →
-
-1. Calculated values of each compound per sample  
-2. QC Summary  
-3. QC Figures  
-4. Copied Raw Data Set for making any QC adjustments
+Excel File with sheets for the following
+1. Batch Details
+2. Concentration values of each compound per sample
+3. Spike Recovery
+4. MDL / MRL
+5. LOQ
+6. EIS Recovery  
+7. QC Flag List
+Copied Raw Data Set for making any QC adjustments
 
 \[Scientist makes QC Adjustments to raw data here\]
 
@@ -38,15 +42,20 @@ Rerun →
 
 Output 2 →
 
-1. Calculated values of each compound per sample  
-2. QC Summary  
-3. QC Figures
+Excel File with sheets for the following
+1. Batch Details
+2. Concentration values of each compound per sample
+3. Spike Recovery
+4. MDL / MRL
+5. LOQ
+6. EIS Recovery  
+7. QC Flag List
 
 Section Details
 
 1. Readfile  
    1. Code Prompts user to input folder location containing files with the following naming convention: 2026\_02\_05\_PFAS\_Quantitation\_ByCompound\_NS\_PFOA\_20260805172522  
-   2. Code reads in all rows from all files and makes master list of entire dataset. Each export file contains exactly one compound, so the master list is the concatenation of all of them.  
+   2. Code reads in all rows from all files and makes master list of entire dataset. Each export file contains exactly one compound, so the master list is the conjoining of all of them.  
       1. Rows that name no sample (no value in Sample Raw File Name) are not measurements and are excluded. At least one export has been seen to end with such a row carrying stray numbers in Total Area and ISTD Area. The number excluded is reported per file on every run.  
       2. Two strings appear inside otherwise-numeric columns and mean different things. N/F is an instrument result meaning the compound was looked for and not found. N/A means the field does not apply to that row and is treated as missing. N/F rows are carried through this section and removed in section 2.  
       3. Compounds that have been retired from the method are excluded as the files are read, and take no part in any later section. They may still appear in older exports. The list of retired compounds is maintained in the notebook and currently holds diSAmPAP, which was removed from the method and is not expected in future batches. The number of rows excluded and the compounds responsible are reported on every run.  
