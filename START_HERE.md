@@ -35,11 +35,13 @@ You do not need to know Python.
 Start a run, naming it for the batch:
 
 ```
-python new_run.py 2026-08-04-oyster
+python new_run.py YYYY-MM-DD-matrix
 ```
 
-That makes `runs/2026-08-04-oyster/` with a copy of the notebook in it. Open
-`runs/2026-08-04-oyster/TA_Processing.ipynb` in VS Code, choose
+Use your own batch's name: the extraction date and the matrix works well, so oysters
+extracted on 4 August 2026 become `2026-08-04-oyster`. That makes a folder under
+`runs/` with a copy of the notebook in it. Open
+`runs/<the name you chose>/TA_Processing.ipynb` in VS Code, choose
 **Python (fluorine)** as the kernel, and read the first cell. It tells you the
 rest.
 
