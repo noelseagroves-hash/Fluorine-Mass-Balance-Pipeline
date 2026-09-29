@@ -1,6 +1,9 @@
 """Start a new batch run.
 
-    python new_run.py 2026-08-04-oyster
+    python new_run.py YYYY-MM-DD-matrix
+
+Name it for the batch: the extraction date and the matrix works well, so oysters
+extracted on 4 August 2026 become 2026-08-04-oyster.
 
 Creates runs/<name>/ and puts a fresh copy of the template notebook in it.
 Work in that copy. The template in the repository root stays blank so it can
@@ -22,7 +25,7 @@ def main(argv):
 
     name = argv[1].strip().strip('/\\')
     if not name:
-        print('Give the run a name, for example: python new_run.py 2026-08-04-oyster')
+        print('Give the run a name, like this: python new_run.py YYYY-MM-DD-matrix')
         return 1
 
     destination = REPO / 'runs' / name / TEMPLATE.name
