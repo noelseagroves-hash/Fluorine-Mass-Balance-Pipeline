@@ -29,3 +29,7 @@ venv/
 
 # macOS folder metadata.
 .DS_Store
+
+# Results written by the notebook: real measurements, and this repo is public.
+final_data.xlsx
+final_data_csv/
